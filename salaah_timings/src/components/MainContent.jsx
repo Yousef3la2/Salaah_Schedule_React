@@ -7,22 +7,53 @@ import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
+import axios from "axios";
+import { useState, useEffect } from 'react';
+import governorates from './governorates';
 
 export default function MainContent() {
-    const handleChange = (event) => {
-        console.log(event.target.value);
+    // STATES
+    const [timings, setTimings] = useState({
+        Fajr: "",
+        Dhuhr: "",
+        Asr: "",
+        Maghrib: "",
+        Isha: ""
+    });
+
+    const [selectedCity, setSelectedCity] = useState(
+        "اسوان"
+    );
+
+    const getTimings = async (city) => {
+        const response = (await axios.get(`https://api.aladhan.com/v1/timingsByCity?country=EG&city=${city}`)).data.data;
+        setTimings(response.timings);
+        console.log(response)
+    }//setTimings(response.data.data.timings)
+    useEffect(() => {
+        getTimings(selectedCity);
+    },[selectedCity]);
+    
+    const handleCityChange = (event) => {
+        const cityObject = governorates.find((city) => {
+            return city.apiName == event.target.value;
+        })
+        console.log(cityObject.displayName);
+        setSelectedCity(cityObject.displayName);
+        //getTimings();
+
       };
   return (
     <>
         {/* Top Row */}
         <Grid container>
-            <Grid xs={6}>
+            <Grid item xs={6}>
                 <div>
                     <h2>يناير 9 2025 | 4:31</h2>
-                    <h1>أسوان</h1>
+                    <h1>{selectedCity}</h1>
                 </div>
             </Grid>
-            <Grid xs={6}>
+            <Grid item xs={6}>
                 <div>
                     <h2>متبقي حتي صلاة المغرب</h2>
                     <h1>2:00:00</h1>
@@ -35,11 +66,11 @@ export default function MainContent() {
 
         {/* Salaah Cards */}
         <Stack direction="row" justifyContent={"space-around"} style={{marginTop: 30}}>
-            <Salaah name="الفجر" time="04:10" image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
-            <Salaah name="الظهر" time="12:20" image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
-            <Salaah name="العصر" time="03:00" image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
-            <Salaah name="المغرب" time="04:20" image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
-            <Salaah name="العشاء" time="07:00" image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
+            <Salaah name="الفجر" time={timings.Fajr} image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
+            <Salaah name="الظهر" time={timings.Dhuhr} image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
+            <Salaah name="العصر" time={timings.Asr} image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
+            <Salaah name="المغرب" time={timings.Maghrib} image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
+            <Salaah name="العشاء" time={timings.Isha} image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
         </Stack>
         {/*== Salaah Cards ==*/}
 
@@ -52,13 +83,14 @@ export default function MainContent() {
             <Select
             labelId="demo-simple-select-label"
             id="demo-simple-select"
-            //value={age}
-            label="Age"
-            onChange={handleChange}
+            label="Governorate"
+            onChange={handleCityChange}
             >
-            <MenuItem value={10}>Ten</MenuItem>
-            <MenuItem value={20}>Twenty</MenuItem>
-            <MenuItem value={30}>Thirty</MenuItem>
+            {governorates.map((gov) => (
+                            <MenuItem key={gov.apiName} value={gov.apiName}>
+                                {gov.displayName}
+                            </MenuItem>
+                        ))}
             </Select>
         </FormControl>
         </Stack>

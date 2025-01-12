@@ -48,3 +48,7 @@ html {
 .MuiSvgIcon-root {
   color: white !important;
 }
+
+.MuiOutlinedInput-input {
+  color: white !important;
+}
