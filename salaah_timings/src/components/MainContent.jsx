@@ -1,114 +1,68 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react';
 import Grid from '@mui/material/Grid';
 import Divider from '@mui/material/Divider';
 import Stack from '@mui/material/Stack';
-import Salaah from './Salaah';
-import InputLabel from '@mui/material/InputLabel';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import Select from '@mui/material/Select';
-import axios from "axios";
-import { useState, useEffect } from 'react';
-import governorates from './governorates';
+import SalaahCards from './SalaahCards';
+import GovernorateSelector from './GovernorateSelector';
+import { getTimings, calculateNextPrayer } from './prayerLogic';
 import moment from 'moment';
 import "moment/dist/locale/ar-kw";
+
 moment.locale("ar");
 
 export default function MainContent() {
-    // STATES
-    const [timings, setTimings] = useState({
-        Fajr: "",
-        Dhuhr: "",
-        Asr: "",
-        Maghrib: "",
-        Isha: ""
-    });
+    const [salaahTimings, setTimings] = useState({ Fajr: "", Dhuhr: "", Asr: "", Maghrib: "", Isha: "" });
+    const [selectedCity, setSelectedCity] = useState("القاهرة");
+    const [today, setToday] = useState("X");
+    const [nextPrayer, setNextPrayer] = useState({ name: "", time: "" });
+    const [timeRemaining, setTimeRemaining] = useState("");
 
-    const [selectedCity, setSelectedCity] = useState(
-        `${governorates[23].displayName}`
-    );
-
-    const [today, setToday] = useState(
-        "X"
-    );
-
-    const getTimings = async (city) => {
-        const response = (await axios.get(`https://api.aladhan.com/v1/timingsByCity?country=EG&city=${city}`)).data.data;
-        setTimings(response.timings);
-        console.log(response)
-    }//setTimings(response.data.data.timings)
     useEffect(() => {
-        getTimings(selectedCity);
-        
         const updateTime = () => {
-            const todayTime = moment();
-            setToday(todayTime.format("MMM Do YYYY | h:mm"));
+            setToday(moment().format("MMM Do YYYY | h:mm:ss"));
+            const { upcomingPrayer, remainingTime } = calculateNextPrayer(salaahTimings);
+            setNextPrayer(upcomingPrayer);
+            setTimeRemaining(remainingTime);
         };
+
         const intervalId = setInterval(updateTime, 1000);
         return () => clearInterval(intervalId);
-    },[selectedCity]);
-    
-    const handleCityChange = (event) => {
-        const cityObject = governorates.find((city) => {
-            return city.apiName == event.target.value;
-        })
-        console.log(cityObject.displayName);
-        setSelectedCity(cityObject.displayName);
-        //getTimings();
+    }, [salaahTimings]);
 
-      };
-  return (
-    <>
-        {/* Top Row */}
-        <Grid container>
-            <Grid item xs={6}>
-                <div>
-                    <h2>{today}</h2>
-                    <h1>{selectedCity}</h1>
-                </div>
-            </Grid>
-            <Grid item xs={6}>
-                <div>
-                    <h2>متبقي حتي صلاة المغرب</h2>
-                    <h1>2:00:00</h1>
-                </div>
-            </Grid>
-        </Grid>
-        {/*== Top Row ==*/}
+    useEffect(() => {
+        const fetchTimings = async () => {
+            const timings = await getTimings(selectedCity);
+            setTimings(timings);
+        };
+        fetchTimings();
+    }, [selectedCity]);
 
-        <Divider style={{borderColor:"white", opacity: "0.2"}}/>
+    return (
+        <>
+            <header>
+                <Grid container>
+                    <Grid item xs={6}>
+                        <div>
+                            <h2>{today}</h2>
+                            <h1>{selectedCity}</h1>
+                        </div>
+                    </Grid>
+                    <Grid item xs={6}>
+                        <div>
+                            <h2>متبقي حتي صلاة {nextPrayer.name}</h2>
+                            <h1>{timeRemaining}</h1>
+                        </div>
+                    </Grid>
+                </Grid>
+            </header>
 
-        {/* Salaah Cards */}
-        <Stack direction="row" justifyContent={"space-around"} style={{marginTop: 30}}>
-            <Salaah name="الفجر" time={timings.Fajr} image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
-            <Salaah name="الظهر" time={timings.Dhuhr} image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
-            <Salaah name="العصر" time={timings.Asr} image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
-            <Salaah name="المغرب" time={timings.Maghrib} image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
-            <Salaah name="العشاء" time={timings.Isha} image="https://prayerinislam.com/wp-content/uploads/2016/01/All-About-Fajr-Prayer.png"/>
-        </Stack>
-        {/*== Salaah Cards ==*/}
+            <Divider style={{ borderColor: "white", opacity: "0.2" }} />
 
-        {/* Select Governorate */}
-        <Stack direction="row" justifyContent={"center"} style={{marginTop: 40}}>
-        <FormControl sx={{ m: 1, minWidth: 250 }} size="small">
-            <InputLabel id="demo-simple-select-label">
-                <span style={{color: "white"}}>المحافظة</span>
-            </InputLabel>
-            <Select
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            label="Governorate"
-            onChange={handleCityChange}
-            >
-            {governorates.map((gov) => (
-                            <MenuItem key={gov.apiName} value={gov.apiName}>
-                                {gov.displayName}
-                            </MenuItem>
-                        ))}
-            </Select>
-        </FormControl>
-        </Stack>
-        {/*== Select Governorate ==*/}
-    </>
-  )
+            <SalaahCards salaahTimings={salaahTimings} />
+
+            <Stack direction="row" justifyContent={"center"} style={{ marginTop: 40 }}>
+                <GovernorateSelector setSelectedCity={setSelectedCity} />
+            </Stack>
+        </>
+    );
 }

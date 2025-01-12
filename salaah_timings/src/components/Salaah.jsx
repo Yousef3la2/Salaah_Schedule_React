@@ -8,20 +8,22 @@ import Typography from '@mui/material/Typography';
 
 export default function SalaahCard({name, time, image}) {
   return (
-    <Card sx={{ maxWidth: 345 }}>
-      <CardMedia
-        sx={{ height: 140 }}
-        image={image}
-        title={`Salaah: ${name}`}
-      />
-      <CardContent>
-        <h2>
-          {name}
-        </h2>
-        <Typography variant="h1" sx={{ color: 'text.secondary' }}>
-            {time}
-        </Typography>
-      </CardContent>
-    </Card>
+    <div className="salaah-card">
+      <Card sx={{ maxWidth: 345 }}>
+        <CardMedia
+          sx={{ height: 140 }}
+          image={image}
+          title={`Salaah: ${name}`}
+        />
+        <CardContent>
+          <h2>
+            {name}
+          </h2>
+          <Typography variant="h1" sx={{ color: 'text.secondary' }}>
+              {time}
+          </Typography>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
