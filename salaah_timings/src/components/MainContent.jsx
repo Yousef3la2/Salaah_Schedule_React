@@ -10,6 +10,9 @@ import Select from '@mui/material/Select';
 import axios from "axios";
 import { useState, useEffect } from 'react';
 import governorates from './governorates';
+import moment from 'moment';
+import "moment/dist/locale/ar-kw";
+moment.locale("ar");
 
 export default function MainContent() {
     // STATES
@@ -22,7 +25,11 @@ export default function MainContent() {
     });
 
     const [selectedCity, setSelectedCity] = useState(
-        "اسوان"
+        `${governorates[23].displayName}`
+    );
+
+    const [today, setToday] = useState(
+        "X"
     );
 
     const getTimings = async (city) => {
@@ -32,6 +39,13 @@ export default function MainContent() {
     }//setTimings(response.data.data.timings)
     useEffect(() => {
         getTimings(selectedCity);
+        
+        const updateTime = () => {
+            const todayTime = moment();
+            setToday(todayTime.format("MMM Do YYYY | h:mm"));
+        };
+        const intervalId = setInterval(updateTime, 1000);
+        return () => clearInterval(intervalId);
     },[selectedCity]);
     
     const handleCityChange = (event) => {
@@ -49,7 +63,7 @@ export default function MainContent() {
         <Grid container>
             <Grid item xs={6}>
                 <div>
-                    <h2>يناير 9 2025 | 4:31</h2>
+                    <h2>{today}</h2>
                     <h1>{selectedCity}</h1>
                 </div>
             </Grid>
